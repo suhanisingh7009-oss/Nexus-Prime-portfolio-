@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uttarakhand Landslide Risk Predictor & Voice Alert</title>
+    <!-- Tailwind CSS for UI styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at top, #0f172a, #020617);
+        }
+        .danger-pulse {
+            animation: pulse-danger 1.8s infinite;
+        }
+        @keyframes pulse-danger {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            }
+            50% {
+                transform: scale(1.01);
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+            }
+        }
+        .warning-pulse {
+            animation: pulse-warning 2s infinite;
+        }
+        @keyframes pulse-warning {
+            0%, 100% {
+                box-shadow: 0 0 10px rgba(249, 115, 22, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(249, 115, 22, 0.6);
+            }
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header Section -->
+    <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-amber-500 text-slate-950 p-2 rounded-xl animate-bounce">
+                    <i class="fa-solid fa-mountain text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-amber-400 tracking-wide">UK Landslide Detector</h1>
+                    <p class="text-xs text-slate-400">
+                        Uttarakhand Voice Alert & Risk Simulator
+                    </p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2 bg-slate-950 px-3 py-1.5 rounded-full border border-slate-800">
+                    <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                    <span class="text-xs font-semibold text-emerald-400">Live Engine Ready</span>
+                </div>
+                <div class="flex bg-slate-800 rounded-lg p-1 border border-slate-700">
+                    <button id="btn-hi" onclick="changeAppLang('hi')" class="px-3 py-1 text-xs rounded font-bold bg-amber-500 text-slate-950 transition">Hinglish</button>
+                    <button id="btn-en" onclick="changeAppLang('en')" class="px-3 py-1 text-xs rounded font-bold text-slate-400 hover:text-white transition">English</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 w-full flex-grow">
+
+        <!-- Left Column: Status and District Selection -->
+        <div class="lg:col-span-8 space-y-6">
+            <div id="risk-status-card" class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6 transition-all duration-500">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                    <div>
+                        <span id="risk-badge" class="px-3 py-1 rounded-full text-xs font-bold tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Normal Halat</span>
+                        <h2 id="selected-area" class="text-2xl font-bold mt-2">Rudraprayag Region</h2>
+                        <p id="sub-route" class="text-xs text-slate-400 mt-1">
+                            Badrinath-Kedarnath Highway Route Analysis
+                        </p>
+                    </div>
+                    <button onclick="playVoiceWarning()" class="w-full md:w-auto bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-6 py-3.5 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-bullhorn text-lg"></i>
+                        <span id="btn-voice-text">Voice Alert Suniye</span>
+                    </button>
+                </div>
+
+                <!-- Risk Score Progress Bar -->
+                <div class="bg-slate-950/80 p-6 rounded-xl border border-slate-800">
+                    <div class="flex justify-between items-center mb-3">
+                        <span id="label-index" class="text-sm font-semibold text-slate-400">Landslide Risk Score (Khatra Index)</span>
+                        <span id="risk-percentage" class="text-3xl font-extrabold text-emerald-400">15%</span>
+                    </div>
+                    <div class="w-full bg-slate-800 rounded-full h-4 overflow-hidden mb-6">
+                        <div id="risk-meter" class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 15%"></div>
+                    </div>
+
+                    <!-- Live Metrics Displays -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            <span class="text-[11px] text-slate-400 block"><i class="fa-solid fa-cloud-rain text-cyan-400 mr-1"></i> Rainfall</span>
+                            <span id="metric-rain" class="text-base font-bold text-slate-200 mt-0.5 block">10 mm/hr</span>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            <span class="text-[11px] text-slate-400 block"><i class="fa-solid fa-droplet text-blue-400 mr-1"></i> Soil Moisture</span>
+                            <span id="metric-moisture" class="text-base font-bold text-slate-200 mt-0.5 block">35%</span>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            <span class="text-[11px] text-slate-400 block"><i class="fa-solid fa-cloud-showers-heavy text-indigo-400 mr-1"></i> 10-D Rain</span>
+                            <span id="metric-cumul" class="text-base font-bold text-slate-200 mt-0.5 block">40 mm</span>
+                        </div>
+                        <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
+                            <span class="text-[11px] text-slate-400 block"><i class="fa-solid fa-compass text-amber-500 mr-1"></i> Slope Angle</span>
+                            <span id="metric-slope" class="text-base font-bold text-slate-200 mt-0.5 block">25°</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- District Selection Grids -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <h3 id="heading-district" class="text-lg font-bold mb-3 text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-location-crosshairs"></i>
+                    <span>Uttarakhand ke High Risk Areas (Click to load data)</span>
+                </h3>
+                <p id="desc-district" class="text-xs text-slate-400 mb-6">
+                    Kisi bhi area par click karke wahan ki vulnerability values simulator me load karein:
+                </p>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div onclick="loadDistrictData('Rudraprayag', 60, 75, 180, 45, 'Kedarnath Route'); fetchRealTimeData('Rudraprayag');" class="cursor-pointer bg-slate-950 hover:bg-slate-800/60 p-4 rounded-xl border border-slate-800 transition-all border-l-4 border-l-red-500">
+                        <h4 class="font-bold text-slate-200">Rudraprayag</h4>
+                        <p class="text-[10px] text-red-400 font-semibold mt-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> Heavy Landslide Zone
+                        </p>
+                    </div>
+                    <div onclick="loadDistrictData('Chamoli', 55, 70, 160, 42, 'Joshimath-Badrinath Route'); fetchRealTimeData('Chamoli');" class="cursor-pointer bg-slate-950 hover:bg-slate-800/60 p-4 rounded-xl border border-slate-800 transition-all border-l-4 border-l-red-500">
+                        <h4 class="font-bold text-slate-200">Chamoli</h4>
+                        <p class="text-[10px] text-red-400 font-semibold mt-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> Joshimath Slope Area
+                        </p>
+                    </div>
+                    <div onclick="loadDistrictData('Uttarkashi', 40, 60, 120, 38, 'Gangotri Route'); fetchRealTimeData('Uttarkashi');" class="cursor-pointer bg-slate-950 hover:bg-slate-800/60 p-4 rounded-xl border border-slate-800 transition-all border-l-4 border-l-orange-500">
+                        <h4 class="font-bold text-slate-200">Uttarkashi</h4>
+                        <p class="text-[10px] text-orange-400 font-semibold mt-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> Bhatwari Terrain
+                        </p>
+                    </div>
+                    <div onclick="loadDistrictData('Pithoragarh', 45, 65, 140, 40, 'Dharchula Road'); fetchRealTimeData('Pithoragarh');" class="cursor-pointer bg-slate-950 hover:bg-slate-800/60 p-4 rounded-xl border border-slate-800 transition-all border-l-4 border-l-orange-500">
+                        <h4 class="font-bold text-slate-200">Pithoragarh</h4>
+                        <p class="text-[10px] text-orange-400 font-semibold mt-1">
+                            <i class="fa-solid fa-circle-exclamation"></i> Border Valley Slope
+                        </p>
+                    </div>
+                    <div onclick="loadDistrictData('Tehri Garhwal', 25, 45, 80, 32, 'Narendranagar-Chamba'); fetchRealTimeData('Tehri Garhwal');" class="cursor-pointer bg-slate-950 hover:bg-slate-800/60 p-4 rounded-xl border border-slate-800 transition-all border-l-4 border-l-yellow-500">
+                        <h4 class="font-bold text-slate-200">Tehri Garhwal</h4>
+                        <p class="text-[10px] text-yellow-400 font-semibold mt-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Medium Vulnerability
+                        </p>
+                    </div>
+                    <div onclick="loadDistrictData('Dehradun-Mussoorie', 15, 30, 50, 28, 'Mussoorie Bypass'); fetchRealTimeData('Dehradun');" class="cursor-pointer bg-slate-950 hover:bg-slate-800/60 p-4 rounded-xl border border-slate-800 transition-all border-l-4 border-l-emerald-500">
+                        <h4 class="font-bold text-slate-200">Dehradun</h4>
+                        <p class="text-[10px] text-emerald-400 font-semibold mt-1">
+                            <i class="fa-solid fa-circle-check"></i> Low Alert Range
+                        </p>
+                    </div>
+                </div>
+                <!-- Graphical Simulation Map Vector -->
+                <div class="mt-6 p-4 bg-slate-950 rounded-xl border border-slate-800 flex flex-col items-center">
+                    <span id="graphics-title" class="text-xs text-slate-400 mb-3">Live Mountain Terrain Map Representation</span>
+                    <svg id="visualizer-svg" class="w-full h-36 md:h-44 max-w-md" viewBox="0 0 300 150">
+                        <rect width="300" height="150" fill="#020617" />
+                        <path d="M220,25 a12,12 0 0,1 24,0 a16,16 0 0,1 28,6 a12,12 0 0,1 0,16 l-52,0 a12,12 0 0,1 0,-22 z" fill="#1e293b" />
+                        <path id="rain-lines" d="M225,50 l-2,6 M240,50 l-2,6 M255,50 l-2,6 M270,50 l-2,6" stroke="#38bdf8" stroke-width="1.5" class="animate-pulse" />
+                        <path id="slope-vector" d="M 0,140 L 110,95 L 210,35 L 300,150 Z" fill="#1e293b" stroke="#475569" stroke-width="2.5" />
+                        <path id="landslide-debris" d="M 170,55 L 230,120 L 130,135 Z" fill="#9a3412" opacity="0" class="transition-all duration-700" />
+                        <text x="15" y="130" fill="#64748b" font-size="9">Highway Valley</text>
+                        <text x="175" y="25" fill="#64748b" font-size="9">Mountain Peak</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Simulator Controls & SOP -->
+        <div class="lg:col-span-4 space-y-6">
+            <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <h3 id="heading-sim" class="text-lg font-bold mb-4 text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Simulator Controls</span>
+                </h3>
+                <div class="space-y-5">
+                    <!-- Slider 1: Rain -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-medium">
+                            <span id="slider-rain-lbl" class="text-slate-300">Rainfall Intensity</span>
+                            <span class="text-amber-400" id="val-disp-rain">10 mm/hr</span>
+                        </div>
+                        <input type="range" id="slider-rain" min="0" max="100" value="10" class="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="triggerSimulationUpdate()">
+                        <div class="flex justify-between text-[9px] text-slate-500 mt-1">
+                            <span>Sookha (0)</span>
+                            <span>Medium</span>
+                            <span>Badal Phatna (100)</span>
+                        </div>
+                    </div>
+                    <!-- Slider 2: Soil Moisture -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-medium">
+                            <span id="slider-moisture-lbl" class="text-slate-300">Soil Moisture (Mitti ki Nami)</span>
+                            <span class="text-amber-400" id="val-disp-moisture">35%</span>
+                        </div>
+                        <input type="range" id="slider-moisture" min="10" max="100" value="35" class="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="triggerSimulationUpdate()">
+                        <div class="flex justify-between text-[9px] text-slate-500 mt-1">
+                            <span>Dry</span>
+                            <span>Saturated</span>
+                            <span>Fully Wet (100)</span>
+                        </div>
+                    </div>
+                    <!-- Slider 3: Cumulative Rain -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-medium">
+                            <span id="slider-cumul-lbl" class="text-slate-300">10-Day Cumulative Rain</span>
+                            <span class="text-amber-400" id="val-disp-cumul">40 mm</span>
+                        </div>
+                        <input type="range" id="slider-cumul" min="0" max="300" value="40" class="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="triggerSimulationUpdate()">
+                        <div class="flex justify-between text-[9px] text-slate-500 mt-1">
+                            <span>0 mm</span>
+                            <span>150 mm</span>
+                            <span>Extremely High (300)</span>
+                        </div>
+                    </div>
+                    <!-- Slider 4: Slope Gradient -->
+                    <div>
+                        <div class="flex justify-between text-xs mb-1 font-medium">
+                            <span id="slider-slope-lbl" class="text-slate-300">Slope Gradient (Dhalan)</span>
+                            <span class="text-amber-400" id="val-disp-slope">25°</span>
+                        </div>
+                        <input type="range" id="slider-slope" min="15" max="60" value="25" class="w-full accent-amber-500 h-2 bg-slate-800 rounded-lg cursor-pointer" oninput="triggerSimulationUpdate()">
+                        <div class="flex justify-between text-[9px] text-slate-500 mt-1">
+                            <span>Plain (15°)</span>
+                            <span>Steep</span>
+                            <span>Dangerous (60°)</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="restoreDefaults()" class="w-full bg-slate-800 hover:bg-slate-700 text-xs font-semibold py-2 rounded-lg mt-6 transition flex justify-center items-center gap-1.5">
+                    <i class="fa-solid fa-arrows-rotate"></i> Reset to Normal
+                </button>
+            </div>
+
+            <!-- Emergency Guidelines Advisory Card -->
+            <div class="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
+                <h3 id="heading-sop" class="text-sm font-bold mb-3 text-amber-400 flex items-center gap-2">
+                    <i class="fa-solid fa-hand-holding-hand"></i>
+                    <span>Emergency Advisory & SOP</span>
+                </h3>
+                <div id="sop-wrapper" class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                    <!-- Dynamic Guidelines Injection -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Area -->
+    <footer class="border-t border-slate-800 bg-slate-950 py-4 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500">
+            <p>
+                © 2026 UK-LARM Landslide Early Warning Simulation Model for Uttarakhand Mountain Safety.
+            </p>
+        </div>
+    </footer>
+
+    <!-- Logic Engine Script -->
+    <script>
+        let appLang = 'hi';
+        let routeTag = 'Badrinath-Kedarnath Highway Route Analysis';
+        let currentDistrictName = 'Rudraprayag';
+
+        const langData = {
+            hi: {
+                btnVoice: "Voice Alert Suniye",
+                normalAlert: "Normal Halat - Sab kuch safe hai",
+                watchAlert: "Watch Alert - Dhyan se chalein",
+                orangeAlert: "Orange Alert - Khatra badh raha hai",
+                dangerAlert: "Red Danger Alert - Bahut bada khatra!",
+                sopSafe: "<li><i class='fa-solid fa-circle-check text-emerald-400 mr-2'></i>Raste bilkul saaf hain. Pahadon me yatra karna abhi safe hai.</li><li><i class='fa-solid fa-circle-check text-emerald-400 mr-2'></i>Yatra par jaane se pehle weather reports zaroor check karein.</li>",
+                sopWatch: "<li><i class='fa-solid fa-triangle-exclamation text-yellow-400 mr-2'></i>Roads par stone-falling (Rockfall) ki choti ghatnayein ho sakti hain.</li><li><i class='fa-solid fa-triangle-exclamation text-yellow-400 mr-2'></i>Raat ke samay travel karne se bachein aur speed dheemi rakhein.</li>",
+                sopOrange: "<li><i class='fa-solid fa-cloud-bolt text-orange-400 mr-2'></i>NH Highways par landslide se raasta block hone ka khatra hai.</li><li><i class='fa-solid fa-cloud-bolt text-orange-400 mr-2'></i>Gair-zaroori yatra (Non-essential travel) ko thodi der ke liye postpone kar dein.</li>",
+                sopDanger: "<li><i class='fa-solid fa-skull-crossbones text-red-500 mr-2'></i><strong>MASSIVE LANDSLIDE RISK:</strong> Turant kisi pakke aur safe building ke andar chalein jayein.</li><li><i class='fa-solid fa-skull-crossbones text-red-500 mr-2'></i>Pahadi dhalan ya kachhe raaston ke aas paas khade hone ki bhool na karein.</li>"
+            },
+            en: {
+                btnVoice: "Listen Voice Alert",
+                normalAlert: "Normal Status - Safe Travel",
+                watchAlert: "Watch Status - Drive Carefully",
+                orangeAlert: "Orange Warning - Significant Risk",
+                dangerAlert: "RED DANGER ALERT - Extreme Risk!",
+                sopSafe: "<li><i class='fa-solid fa-circle-check text-emerald-400 mr-2'></i>Routes are completely clear. It is currently safe to travel.</li><li><i class='fa-solid fa-circle-check text-emerald-400 mr-2'></i>Keep checking daily weather updates before departure.</li>",
+                sopWatch: "<li><i class='fa-solid fa-triangle-exclamation text-yellow-400 mr-2'></i>Minor rockfalls are possible. Watch out for sharp mountain bends.</li><li><i class='fa-solid fa-triangle-exclamation text-yellow-400 mr-2'></i>Avoid driving late at night in heavy mist or rain.</li>",
+                sopOrange: "<li><i class='fa-solid fa-cloud-bolt text-orange-400 mr-2'></i>High possibility of key highway blockages on Chardham routes.</li><li><i class='fa-solid fa-cloud-bolt text-orange-400 mr-2'></i>Postpone travel if possible until the weather settles down.</li>",
+                sopDanger: "<li><i class='fa-solid fa-skull-crossbones text-red-500 mr-2'></i><strong>EXTREME HAZARD:</strong> Seek immediate concrete shelter inside stable buildings.</li><li><i class='fa-solid fa-skull-crossbones text-red-500 mr-2'></i>Do not stand near loose soil, streams, or steep cliff faces.</li>"
+            }
+        };
+
+        const ttsEngine = window.speechSynthesis;
+
+        function changeAppLang(languageCode) {
+            appLang = languageCode;
+            document.getElementById('btn-hi').className = languageCode === 'hi' ?
+            "px-3 py-1 text-xs rounded font-bold bg-amber-500 text-slate-950 transition":
+            "px-3 py-1 text-xs rounded font-bold text-slate-400 hover:text-white transition";
+            document.getElementById('btn-en').className = languageCode === 'en' ?
+            "px-3 py-1 text-xs rounded font-bold bg-amber-500 text-slate-950 transition":
+            "px-3 py-1 text-xs rounded font-bold text-slate-400 hover:text-white transition";
+
+            document.getElementById('btn-voice-text').innerText = langData[languageCode].btnVoice;
+            triggerSimulationUpdate();
+        }
+
+        function loadDistrictData(districtName, rainVal, moistureVal, cumulVal, slopeVal, routeDescription) {
+            currentDistrictName = districtName;
+            routeTag = routeDescription;
+            document.getElementById('selected-area').innerText = `${districtName} Region`;
+            document.getElementById('sub-route').innerText = routeDescription;
+
+            document.getElementById('slider-rain').value = rainVal;
+            document.getElementById('slider-moisture').value = moistureVal;
+            document.getElementById('slider-cumul').value = cumulVal;
+            document.getElementById('slider-slope').value = slopeVal;
+
+            triggerSimulationUpdate();
+        }
+
+        function restoreDefaults() {
+            loadDistrictData('Rudraprayag', 10, 35, 40, 25, 'Badrinath-Kedarnath Highway Route Analysis');
+        }
+
+        function triggerSimulationUpdate() {
+            const rain = parseInt(document.getElementById('slider-rain').value);
+            const moisture = parseInt(document.getElementById('slider-moisture').value);
+            const cumul = parseInt(document.getElementById('slider-cumul').value);
+            const slope = parseInt(document.getElementById('slider-slope').value);
+
+            // Update value displays
+            document.getElementById('val-disp-rain').innerText = `${rain} mm/hr`;
+            document.getElementById('val-disp-moisture').innerText = `${moisture}%`;
+            document.getElementById('val-disp-cumul').innerText = `${cumul} mm`;
+            document.getElementById('val-disp-slope').innerText = `${slope}°`;
+
+            document.getElementById('metric-rain').innerText = `${rain} mm/hr`;
+            document.getElementById('metric-moisture').innerText = `${moisture}%`;
+            document.getElementById('metric-cumul').innerText = `${cumul} mm`;
+            document.getElementById('metric-slope').innerText = `${slope}°`;
+
+            // Calculate weighted risk index
+            const scoreRain = (rain / 100) * 35;
+            const scoreMoisture = (moisture / 100) * 20;
+            const scoreCumul = (cumul / 300) * 25;
+            const scoreSlope = ((slope - 15) / 45) * 20;
+
+            let finalIndex = Math.round(scoreRain + scoreMoisture + scoreCumul + scoreSlope);
+            if (finalIndex > 100) finalIndex = 100;
+            if (finalIndex < 0) finalIndex = 0;
+
+            const scoreDisp = document.getElementById('risk-percentage');
+            const progress = document.getElementById('risk-meter');
+            const statusCard = document.getElementById('risk-status-card');
+            const statusBadge = document.getElementById('risk-badge');
+            const visualDebris = document.getElementById('landslide-debris');
+            const visualSlope = document.getElementById('slope-vector');
+
+            scoreDisp.innerText = `${finalIndex}%`;
+            progress.style.width = `${finalIndex}%`;
+
+            // State management based on Risk Score
+            if (finalIndex < 30) {
+                scoreDisp.className = "text-3xl font-extrabold text-emerald-400";
+                progress.className = "bg-emerald-500 h-full rounded-full transition-all duration-500";
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold tracking-widest bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
+                statusBadge.innerText = langData[appLang].normalAlert;
+                statusCard.className = "bg-slate-900/50 border border-slate-800 rounded-2xl p-6 transition-all duration-500";
+                document.getElementById('sop-wrapper').innerHTML = langData[appLang].sopSafe;
+                visualDebris.setAttribute("opacity", "0");
+                visualSlope.setAttribute("fill", "#1e293b");
+            } else if (finalIndex >= 30 && finalIndex < 55) {
+                scoreDisp.className = "text-3xl font-extrabold text-yellow-400";
+                progress.className = "bg-yellow-500 h-full rounded-full transition-all duration-500";
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold tracking-widest bg-yellow-500/10 text-yellow-400 border border-yellow-500/30";
+                statusBadge.innerText = langData[appLang].watchAlert;
+                statusCard.className = "bg-slate-900/50 border border-yellow-500/40 rounded-2xl p-6 transition-all duration-500 warning-pulse";
+                document.getElementById('sop-wrapper').innerHTML = langData[appLang].sopWatch;
+                visualDebris.setAttribute("opacity", "0.3");
+                visualSlope.setAttribute("fill", "#2e251b");
+            } else if (finalIndex >= 55 && finalIndex < 75) {
+                scoreDisp.className = "text-3xl font-extrabold text-orange-400";
+                progress.className = "bg-orange-500 h-full rounded-full transition-all duration-500";
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold tracking-widest bg-orange-500/10 text-orange-400 border border-orange-500/30";
+                statusBadge.innerText = langData[appLang].orangeAlert;
+                statusCard.className = "bg-slate-900/50 border border-orange-500/50 rounded-2xl p-6 transition-all duration-500";
+                document.getElementById('sop-wrapper').innerHTML = langData[appLang].sopOrange;
+                visualDebris.setAttribute("opacity", "0.6");
+                visualSlope.setAttribute("fill", "#402613");
+            } else {
+                scoreDisp.className = "text-3xl font-extrabold text-red-400";
+                progress.className = "bg-red-500 h-full rounded-full transition-all duration-500";
+                statusBadge.className = "px-3 py-1 rounded-full text-xs font-bold tracking-widest bg-red-500/20 text-red-400 border border-red-500/50";
+                statusBadge.innerText = langData[appLang].dangerAlert;
+                statusCard.className = "bg-slate-900/50 border border-red-500/60 rounded-2xl p-6 transition-all duration-500 danger-pulse";
+                document.getElementById('sop-wrapper').innerHTML = langData[appLang].sopDanger;
+                visualDebris.setAttribute("opacity", "1");
+                visualSlope.setAttribute("fill", "#5c1e0c");
+            }
+        }
+
+        function playVoiceWarning() {
+            const district = currentDistrictName;
+            const score = document.getElementById('risk-percentage').innerText;
+            const rainVal = document.getElementById('slider-rain').value;
+            const scoreInt = parseInt(score);
+
+            ttsEngine.cancel();
+            let finalSpeechString = "";
+
+            if (appLang === 'hi') {
+                finalSpeechString = `Dhyan dein! Uttarakhand Landslide warning system update. ${district} me khatra index abhi ${score} hai. `;
+                if (scoreInt < 30) {
+                    finalSpeechString += "Mausam bilkul saaf hai aur raaste surakshit hain. Kripya dhyan se yatra karein.";
+                } else if (scoreInt >= 30 && scoreInt < 55) {
+                    finalSpeechString += `Dhyan rakhein, yahan halki barish ${rainVal} millimeter prati ghanta ho rahi hai, pahadon par rockfall ho sakta hai.`;
+                } else if (scoreInt >= 55 && scoreInt < 75) {
+                    finalSpeechString += "Warning alert! Teji se landslide hone ki sambhavna hai. Apni yatra ko abhi taal dein aur kisi surakshit sthan par chalein jayein.";
+                } else {
+                    finalSpeechString += "Khatra alert! Emergency Red Zone! Bhari landslide ka khatra hai. Kripya turant pakke karkat gharon ke andar ashray lein!";
+                }
+            } else {
+                finalSpeechString = `Attention please! Uttarakhand Landslide Warning System update. The current risk score in ${district} region is ${score}. `;
+                if (scoreInt < 30) {
+                    finalSpeechString += "Weather is normal and roads are clear. Enjoy a safe journey.";
+                } else if (scoreInt >= 30 && scoreInt < 55) {
+                    finalSpeechString += `Caution! Minor rocks can fall due to current rain of ${rainVal} millimeters per hour. Drive slowly.`;
+                } else if (scoreInt >= 55 && scoreInt < 75) {
+                    finalSpeechString += "Severe Alert! Saturated soil conditions might trigger blockages on highways. Avoid travel.";
+                } else {
+                    finalSpeechString += "Emergency Red Alert! Immediate threat of catastrophic landslide. Evacuate dangerous slopes immediately!";
+                }
+            }
+
+            const utteranceObj = new SpeechSynthesisUtterance(finalSpeechString);
+            utteranceObj.lang = appLang === 'hi' ? 'hi-IN': 'en-US';
+            utteranceObj.rate = 0.95;
+
+            const systemVoices = ttsEngine.getVoices();
+            if (systemVoices.length > 0) {
+                const bestVoice = systemVoices.find(voice =>
+                    voice.lang.includes(appLang === 'hi' ? 'hi': 'en')
+                );
+                if (bestVoice) {
+                    utteranceObj.voice = bestVoice;
+                }
+            }
+            ttsEngine.speak(utteranceObj);
+        }
+
+        window.onload = function() {
+            restoreDefaults();
+            // Trigger voice synthesis load for some browsers
+            if (typeof speechSynthesis !== 'undefined' && speechSynthesis.onvoiceschanged !== undefined) {
+                speechSynthesis.onvoiceschanged = triggerSimulationUpdate;
+                // 1. Apni Free API Key yahan dalein (OpenWeatherMap se lekar)
+                const apiKey = "9b2cddc2b05e7d14ab59eb51df927a93";
+
+                // 2. Real-time data fetch karne ka function
+                async function fetchRealTimeData(districtName) {
+
+                    // Uttarakhand ke districts ke coordinates (Latitude & Longitude)
+                    const coordinates = {
+                        'Rudraprayag': {
+                            lat: 30.28,
+                            lon: 78.98
+                        },
+                        'Chamoli': {
+                            lat: 30.40,
+                            lon: 79.33
+                        },
+                        'Uttarkashi': {
+                            lat: 30.73,
+                            lon: 78.45
+                        },
+                        'Pithoragarh': {
+                            lat: 29.58,
+                            lon: 80.21
+                        },
+                        'Tehri Garhwal': {
+                            lat: 30.38,
+                            lon: 78.48
+                        },
+                        'Dehradun': {
+                            lat: 30.31,
+                            lon: 78.03
+                        }
+                    };
+
+                    const loc = coordinates[districtName];
+                    if (!loc) return;
+
+                    try {
+                        // OpenWeather API se live data mangwana
+                        const response = await fetch(`http://api.openweathermap.org/data/2.5/weather?lat=${loc.lat}&lon=${loc.lon}&appid=${apiKey}&units=metric`);
+                        const data = await response.json();
+
+                        // 3. Live Rain nikalna (agar barish ho rahi ho, nahi toh 0)
+                        let liveRain = 0;
+                        if (data.rain && data.rain['1h']) {
+                            liveRain = data.rain['1h'];
+                            // pichle 1 ghante ki barish mm mein
+                        }
+
+                        // 4. Live Moisture nikalna (Humidity ko hum mitti ki nami ka base maan sakte hain)
+                        let liveMoisture = data.main.humidity;
+
+                        // 5. Sliders ko automatic asli data par set karna
+                        document.getElementById('slider-rain').value = Math.round(liveRain);
+                        document.getElementById('slider-moisture').value = liveMoisture;
+
+                        // Aapki purani screen ko update karna
+                        triggerSimulationUpdate();
+
+                        console.log(`Live data loaded for ${districtName}: Rain=${liveRain}mm, Moisture=${liveMoisture}%`);
+                    } catch (error) {
+                        console.error("Real data load karne me pareshani hui: ", error);
+                    }
+                }
+            }
+        };
+    </script>
+</body>
+</html>
