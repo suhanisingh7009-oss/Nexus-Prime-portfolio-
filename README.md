@@ -12,8 +12,7 @@ An interactive, responsive client-side early warning simulation model designed t
 ### 📸 Project Screenshots
 
 <p align="center">
-  <img src=" " alt="Main Dashboard Screenshot" width="45%">
-  <img src=" " alt="Mobile View Screenshot" width="45%">
+  <img src="https://github.com/user-attachments/assets/00e88a87-1c7e-47d6-9a29-f8b7cb24e9af" />" width="45%">
 </p>
 ---
 
