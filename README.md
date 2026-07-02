@@ -9,7 +9,7 @@ Welcome to **Nexus Prime**—my central innovation hub and engineering portfolio
 
 An interactive, responsive client-side early warning simulation model designed to monitor and predict landslide hazard indices across high-vulnerability districts of Uttarakhand.
 
-### 📸 Project Screenshots
+### 📸 Interface preview 
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/00e88a87-1c7e-47d6-9a29-f8b7cb24e9af" />" 
